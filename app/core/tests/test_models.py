@@ -14,17 +14,17 @@ class ModelTests(TestCase):
         """test creating a user with email successful"""
         email = 'test@example.com'
         password = 'testpass123'
-        user = User.objects.create_user(email, password)
+        user = get_user_model().objects.create_user(email=email, password=password,)
 
-        self.assertEqual(user.email, email)
-        # self.assertTrue(user.check_password(password))
+        # self.assertEqual(user.email, email)
+        self.assertTrue(user.check_password(password))
 
     # def test_new_user_email_normalized(self):
     #     """test email is normalized"""
     #     sample_emails = [
     #         ['test1@EXAMPLE.com', 'test1@example.com'],
     #         ['Test2@Example.com', 'Test2@example.com'],
-    #         ['TEST3@EXAMPLE.COM', 'TEST3@example.com'],
+    #         ['TEST3@EXAMPLE.com', 'TEST3@example.com'],
     #         ['test4@example.COM', 'test4@example.com'],
     #     ]
 
