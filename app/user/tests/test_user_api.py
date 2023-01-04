@@ -23,7 +23,8 @@ class PublicUserApiTests(TestCase):
             'password': 'test123',
             'name': 'Reagan'
         }
-        res = self.client.post(CREATE_USER_URL, **payload)
+
+        res = self.client.post(CREATE_USER_URL, payload)
 
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
         user = get_user_model().objects.get(email=payload['email'])
@@ -37,7 +38,7 @@ class PublicUserApiTests(TestCase):
             'name': 'Reagan'
         }
         create_user(**payload)
-        res = self.client.post(CREATE_USER_URL, **payload)
+        res = self.client.post(CREATE_USER_URL, payload)
 
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
