@@ -7,7 +7,7 @@ from core.models import Recipe
 from decimal import Decimal
 from rest_framework import status
 from rest_framework.test import APIClient
-from recipe.serializers import RecipeSerializer
+from recipe.serializers import (RecipeSerializer, RecipeDetailSerializer)
 
 
 def create_recipe(user, **params):
@@ -21,10 +21,14 @@ def create_recipe(user, **params):
     }
 
     defaults.update(**params)
-    return Recipe.objects.create(user, **defaults)
+    return Recipe.objects.create(user=user, **defaults)
 
 
-RECIPE_URL = 'recipe:recipes'
+RECIPE_URL = reverse('recipe:recipe-list')
+
+
+def detail_url(recipe_id):
+    return reverse('recipe:recipe-detail', args=[recipe_id])
 
 
 class PublicRecipeApiTest(TestCase):
@@ -72,3 +76,30 @@ class PrivateRecipeApiTest(TestCase):
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data, serializer.data)
+
+    def test_get_recipe_details(self):
+        recipe = create_recipe(user=self.user)
+
+        url = detail_url(recipe.id)
+        res = self.client.get(url)
+
+        serializer = RecipeDetailSerializer(recipe)
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data, serializer.data)
+
+    def test_create_recipe(self):
+        payload = {
+            'title': 'Sample title',
+            'price': Decimal('4.5'),
+            'time_minutes': 25,
+        }
+
+        res = self.client.post(RECIPE_URL, payload)
+
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        recipe = Recipe.objects.get(id=res.data['id'])
+
+        for k, v in payload.items():
+            self.assertEqual(getattr(recipe, k), v)
+        self.assertEqual(recipe.user, self.user)
