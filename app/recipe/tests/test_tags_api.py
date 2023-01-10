@@ -60,17 +60,6 @@ class PrivateTagApiTest(TestCase):
         self.assertEqual(len(res.data), 1)
         self.assertEqual(res.data[0]['name'], tag.name)
 
-    # def test_get_tag_details(self):
-    #     tag = Tag.objects.create(user=self.user, name='Veggie')
-
-    #     url = detail_url(tag.id)
-    #     res = self.client.get(url)
-
-    #     serializer = TagDetailSerializer(tag)
-
-    #     self.assertEqual(res.status_code, status.HTTP_200_OK)
-    #     self.assertEqual(res.data, serializer.data)
-
     def test_update_tag(self):
         tag = Tag.objects.create(user=self.user, name='Veggie')
         payload = {'name': 'New Tag'}
@@ -80,3 +69,10 @@ class PrivateTagApiTest(TestCase):
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         tag.refresh_from_db()
         self.assertEqual(tag.name, payload['name'])
+
+    def test_delete_tag(self):
+        tag = Tag.objects.create(user=self.user, name='Veggie')
+        url = detail_url(tag.id)
+        res = self.client.delete(url)
+
+        self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
