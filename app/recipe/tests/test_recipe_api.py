@@ -3,7 +3,7 @@
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from django.test import TestCase
-from core.models import Recipe
+from core.models import (Recipe, Tag)
 from decimal import Decimal
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -139,3 +139,43 @@ class PrivateRecipeApiTest(TestCase):
         res = self.client.delete(url)
 
         self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_create_recipe_with_tag(self):
+        payload = {
+            'title': 'Thai Food',
+            'time_minutes': 45,
+            'price': Decimal('25.5'),
+            'tags': [{'name': 'Thai'}, {'name': 'Dinner'}],
+        }
+
+        res = self.client.post(RECIPE_URL, payload, format='json')
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        recipes = Recipe.objects.filter(user=self.user)
+        self.assertEqual(recipes.count(), 1)
+        recipe = recipes[0]
+        self.assertEqual(recipe.tags.count(), 2)
+        for tag in payload['tags']:
+            exist = recipe.tags.filter(
+                user=self.user, name=tag['name']).exists()
+            self.assertTrue(exist)
+
+    def test_create_recipe_with_existing_tag(self):
+        tag_indian = Tag.objects.create(user=self.user, name='Indian')
+        payload = {
+            'title': 'Indian Food',
+            'time_minutes': 25,
+            'price': Decimal('22.5'),
+            'tags': [{'name': 'Indian'}, {'name': 'Breakfast'}],
+
+        }
+        res = self.client.post(RECIPE_URL, payload, format='json')
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        recipes = Recipe.objects.filter(user=self.user)
+        self.assertEqual(recipes.count(), 1)
+        recipe = recipes[0]
+        self.assertEqual(recipe.tags.count(), 2)
+        self.assertIn(tag_indian, recipe.tags.all())
+        for tag in payload['tags']:
+            exist = recipe.tags.filter(
+                user=self.user, name=tag['name']).exists()
+            self.assertTrue(exist)
